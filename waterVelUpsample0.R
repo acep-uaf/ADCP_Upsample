@@ -9,7 +9,6 @@ library("pracma")
 library("Langevin")
 library("plotrix")
 
-#velData <- read.csv(file = 'vel_4.csv')
 velData <- read.csv(file = '230713ad2cp_swvel4.csv')
 
 head(velData)
@@ -32,8 +31,8 @@ x_movavg <- movavg(x, x_window,type = 's')
 #x_movavg <- c(x_movavg[round(x_window/2):length(x)],x[(length(x)-x_window+round(x_window/2)+2):length(x)]) # center the moving average
 x_movavg <- x_movavg[round(x_window/2):(x_total+round(x_window/2)-1)] # center the moving average
 x <- x[1:x_total]
-x_std = sd(x_movavg)
-x_minus_movavg <- (x - x_movavg) / x_std
+x_std_mv <- sd(x_movavg)
+x_minus_movavg <- (x - x_movavg) / x_std_mv
 
 # plot first 1000 velocity time steps with moving average
 par(mfrow = c(1, 1))
@@ -92,7 +91,6 @@ mtext(ylab.text, side = 2, line = 2.5)
 lines(mean_bin[as.numeric(names(predict(linearModD2)))],predict(linearModD2,na.rm = FALSE),col = 'red')
 
 # generate time series from langevin coefficients
-par(mfrow = c(1, 1))
 set.seed(11)
 calcVals <- timeseries1D(length(x), startpoint = 0,
                         #d13 = coefficients(linearModD1)[4],
@@ -105,6 +103,7 @@ calcVals <- timeseries1D(length(x), startpoint = 0,
                          d21 = coefficients(linearModD2)[2],
                          d20 = coefficients(linearModD2)[1], sf=fs)
 
+par(mfrow = c(1, 1))
 plot(x_minus_movavg[1:1000], type = 'l', ylab = "", main = "Normalized Difference from Moving Average")
 lines(calcVals[1:1000], col='orange')
 legText = c("Measured", "Generated")
@@ -115,7 +114,10 @@ legend(x = "topright", legend = legText, lty = c(1, 1), col = c('black', 'orange
 #plot(x_minus_movavg, type = 'l', ylab = "", main = "Normalized Difference from Moving Average")
 #lines(calcVals, col='red')
 
-x_calc <- x_std * calcVals + x_movavg
+x_calc <- x_std_mv * calcVals + x_movavg
+
+x_std_calc <- sd(x_calc)
+x_std_orig <- sd(x)
 
 # Plot velocities
 plot(x[1:1000], type = 'l', ylab = "",)
