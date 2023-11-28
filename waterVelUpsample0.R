@@ -16,7 +16,7 @@ head(velData)
 
 # nome data is in 10 second time steps for 1 year. 
 
-fs <- 1
+fs <- 8
 #x <- slice(velData, 1:45000)
 x <- velData[,1] 
 
@@ -34,10 +34,12 @@ x <- x[1:x_total]
 x_std_mv <- sd(x_movavg)
 x_minus_movavg <- (x - x_movavg) / x_std_mv
 
+t <- c(0:(x_total-1))/fs
+
 # plot first 1000 velocity time steps with moving average
 par(mfrow = c(1, 1))
-plot(x[1:1000], type = 'l', ylab = "Velocity (m/s)")
-lines(x_movavg[1:1000],col='red')
+plot(t[1:1000],x[1:1000], type = 'l', ylab = "Velocity (m/s)", xlab = "Time (s)")
+lines(t[1:1000],x_movavg[1:1000],col='red')
 legText = c("Data", "Moving Average")
 legend(x = "bottomright", legend = legText, lty = c(1, 1), col = c('black', 'red'))
 
@@ -104,8 +106,8 @@ calcVals <- timeseries1D(length(x), startpoint = 0,
                          d20 = coefficients(linearModD2)[1], sf=fs)
 
 par(mfrow = c(1, 1))
-plot(x_minus_movavg[1:1000], type = 'l', ylab = "", main = "Normalized Difference from Moving Average")
-lines(calcVals[1:1000], col='orange')
+plot(t[1:1000],x_minus_movavg[1:1000], type = 'l', ylab = "", xlab = 'Time (s)', main = "Normalized Difference from Moving Average")
+lines(t[1:1000],calcVals[1:1000], col='orange')
 legText = c("Measured", "Generated")
 legend(x = "topright", legend = legText, lty = c(1, 1), col = c('black', 'orange'))
 
@@ -120,8 +122,8 @@ x_std_calc <- sd(x_calc)
 x_std_orig <- sd(x)
 
 # Plot velocities
-plot(x[1:1000], type = 'l', ylab = "",)
-lines(x_calc[1:1000],col='orange')
+plot(t[1:1000],x[1:1000], type = 'l', ylab = "", xlab = 'Time (s)')
+lines(t[1:1000],x_calc[1:1000],col='orange')
 legend(x = "bottomright", legend = legText, lty = c(1, 1), col = c('black', 'orange'))
 #plot(x[end_window], type = 'l', ylab = "",)
 #lines(x_calc[end_window],col='orange')
@@ -134,11 +136,16 @@ legend(x = "bottomright", legend = legText, lty = c(1, 1), col = c('black', 'ora
 #calculate fast fourier transform
 x_fft <- fft(x)
 calc_fft <- fft(x_calc)
+f <- c(0:(x_total-1))*fs/x_total
 
 par(mfrow = c(2, 1))
 y.lim = c(0, 300)
-plot(Mod(x_fft[1:(x_total/2)]), type = 'l', ylim = y.lim, ylab = "", main = "FFT of Measured Velocities")
-plot(Mod(calc_fft[1:(x_total/2)]), type = 'l', ylim = y.lim, ylab = "", xlab = 'Index', main = "FFT of Generated Velocities")
+plot(f[1:(x_total/2)],Mod(x_fft[1:(x_total/2)]), type = 'l', ylim = y.lim, ylab = "", xlab = 'Frequency (Hz)',main = "FFT of Measured Velocities")
+plot(f[1:(x_total/2)],Mod(calc_fft[1:(x_total/2)]), type = 'l', ylim = y.lim, ylab = "", xlab = 'Frequency (Hz)', main = "FFT of Generated Velocities")
+y.lim = c(1e-1, 1e3)
+plot(f[1:(x_total/2)],Mod(x_fft[1:(x_total/2)]), type = 'l', ylim = y.lim, log = 'xy', ylab = "", xlab = 'Frequency (Hz)', main = "FFT of Measured Velocities")
+plot(f[1:(x_total/2)],Mod(calc_fft[1:(x_total/2)]), type = 'l', ylim = y.lim, log = 'xy', ylab = "", xlab = 'Frequency (Hz)', main = "FFT of Generated Velocities")
+
 
 # test if time series is stationary 
 adf.test(x_minus_movavg) # p-value < 0.05 indicates the TS is stationary
